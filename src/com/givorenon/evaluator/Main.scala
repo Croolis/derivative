@@ -33,7 +33,7 @@ object Expression {
   }
 
   private case class Function(name: String, argument: Node) extends Node {
-    override def evaluate = derivate(argument.evaluate)
+    override def evaluate = derivative(argument.evaluate)
   }
 
   private case class Negate(expr: Node) extends Node {
@@ -231,72 +231,84 @@ object Expression {
   // Фабричный метод для Expression-ов.
   def apply(expr: String) = new Expression(Parser(expr).parse.get)
 
-  var derivateArr = Array.fill[Int](10000001)(0);
-  var lowestDivisor = Array.fill[Int](10000001)(0);
-  var primes = Array.fill[Int](10000001)(-1);
-  var pointer = 0;
-  var firstCall = true;
-  def derivate(n:Option[Int]) : Option[Int] = {
+  val N : Int = 1000000
+  var derivateArr = Array.fill[Int](N + 1)(0)
+  var lowestDivisor = Array.fill[Int](N + 1)(0)
+  var primes = Array.fill[Int](N + 1)(-1)
+  var pointer = 0
+  var firstCall = true
+  def derivative(n:Option[Int]) : Option[Int] = {
     if (firstCall) {
       firstCall = false
-      derivateArr.update(0, 0);
-      derivateArr.update(1, 0);
-      for (i <- 2 to 10000000) {
+      derivateArr.update(0, 0)
+      derivateArr.update(1, 0)
+      for (i <- 2 to N) {
         if (lowestDivisor(i) == 0) {
-          lowestDivisor.update(i, i);
-          derivateArr.update(i, 1);
-          primes.update(pointer, i);
-          pointer += 1;
+          lowestDivisor.update(i, i)
+          derivateArr.update(i, 1)
+          primes.update(pointer, i)
+          pointer += 1
         }
-        var p = 0;
-        while (primes(p) <= lowestDivisor(i) && primes(p) * i < 10000001 && primes(p) != -1) {
+        var p = 0
+        while (primes(p) <= lowestDivisor(i) && primes(p) * i < N + 1 && primes(p) != -1) {
           lowestDivisor.update(i * primes(p), primes(p))
           derivateArr.update(i * primes(p), derivateArr(primes(p)) * i + derivateArr(i) * primes(p))
-          p += 1;
+          p += 1
         }
       }
     }
     if (n.isDefined)
-      return Some(derivateArr(n.get));
-    return None;
+      return Some(derivateArr(n.get))
+    None
   }
 }
 
 object Helper {
-  def evaluate(str: String): Unit = {
+  def doEvaluate(str: String): Int = {
     val expr = Expression(str)
     expr.evaluate match {
-      case Some(value) => println(str + " equals to " + value)
-      case _ => println("Cannot evaluate expression because of unbound variables.")
+      case Some(value) => return value
+      case _ => throw new Exception("Cannot evaluate expression because of unbound variables.")
     }
   }
 
-  def solve(str: String, n: Int): scala.collection.mutable.Set[Int] = {
-    var res = scala.collection.mutable.Set[Int]();
+  def evaluate(str: String): Unit = {
+    println(str + " equals to " + Helper.doEvaluate(str))
+  }
+
+  def doSolve(str: String, n: Int): scala.collection.mutable.Set[Int] = {
+    var res = scala.collection.mutable.Set[Int]()
     for (i <- 1 to n) {
-      val expr = Expression(str.replace("x", i.toString))
-      expr.evaluate match {
-        case Some(value) => {
-          if (value == 0) {
-            res += i;
-          }
-        }
-        case _ => println("Cannot evaluate expression because of unbound variables.")
+      val value = doEvaluate(str.replace("x", i.toString))
+      if (value == 0) {
+        res += i
       }
     }
-    return res;
+    res
+  }
+
+  def solve(str: String, n: Int): Unit = {
+    val solutions = this.doSolve(str, n)
+    if (solutions.nonEmpty) {
+      print(str + " has solutions ")
+      for (solution <- solutions)
+        print(solution.toString + " ")
+    } else {
+      print(str + " has no solutions")
+    }
+    println()
   }
 
   def bruteCoefficients(str: String, n: Int, k: Int): Unit = {
     for (i <- 1 to k) {
       for (j <- 1 to k) {
-        val anotherStr = str.replace("a", i.toString).replace("b", j.toString);
-        val solutions = this.solve(anotherStr, n);
+        val anotherStr = str.replace("a", i.toString).replace("b", j.toString)
+        val solutions = this.doSolve(anotherStr, n)
         if (solutions.size != n && solutions.size > 1) {
           print(anotherStr + " has solutions ")
           for (solution <- solutions)
-            print(solution.toString + " ");
-          println();
+            print(solution.toString + " ")
+          println()
         }
       }
     }
@@ -304,13 +316,13 @@ object Helper {
 
   def bruteCoefficient(str: String, n: Int, k: Int): Unit = {
     for (i <- 1 to k) {
-      val anotherStr = str.replace("a", i.toString);
-      val solutions = this.solve(anotherStr, n);
+      val anotherStr = str.replace("a", i.toString)
+      val solutions = this.doSolve(anotherStr, n)
       if (solutions.size != n && solutions.size > 1) {
         print(anotherStr + " has solutions ")
         for (solution <- solutions)
-          print(solution.toString + " ");
-        println();
+          print(solution.toString + " ")
+        println()
       }
     }
   }
@@ -319,7 +331,33 @@ object Helper {
 
 object Main {
   def main(args: Array[String]) {
-    //Helper.bruteCoefficient("d[d[x]] - x * 5 + a", 1000000, 10);
-    Helper.solve("d[d[x]] - x * 5 + 1", 1000000)
+    var keepWorking = true
+    while (keepWorking) {
+      val in = scala.io.StdIn.readLine()
+      if (in == "quit")
+        keepWorking = false
+      if (in == "help")
+        println("'quit' to stop\n'evaluate' to find value\n'solve' to find solutions\n" +
+          "'brute' to solve class of expressions\n'help' to see commands")
+      if (in == "evaluate") {
+        println("Type expression without any variables")
+        Helper.evaluate(scala.io.StdIn.readLine())
+      }
+      if (in == "solve") {
+        println("Type expression with variable 'x' and no other variables\n" +
+          "Program will solve equation 'expression = 0'")
+        Helper.solve(scala.io.StdIn.readLine(), 1000000)
+      }
+      if (in == "brute") {
+        println("Type expression with variable 'x' and one constant 'a' or two constants 'a' and 'b'\n" +
+          "Program will solve equation 'expression = 0' for different values of constant(s)")
+        val expression = scala.io.StdIn.readLine()
+        if (expression.contains('b')) {
+          Helper.bruteCoefficients(expression, 10000, 10)
+        } else {
+          Helper.bruteCoefficient(expression, 100000, 10)
+        }
+      }
+    }
   }
 }
