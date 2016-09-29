@@ -1,8 +1,3 @@
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <vector>
 #include <iostream>
 
@@ -13,10 +8,7 @@ vector<int> prime;
 vector<int> lowest_divisor(n + 1, 0);
 vector<int> derivative(n + 1, 0);
 
-int der_fd;
-int div_fd;
-
-int derivate(int x) {
+int derive(int x) {
 	return derivative[x];
 }
 
@@ -46,7 +38,7 @@ int main() {
 				break;
 			int b = i;
 			
-			int der = derivate(a) * b + a * derivate(b);
+			int der = derive(a) * b + a * derive(b);
 			setLowestDivisor(t, prime[j]);
 			setDerivative(t, der);
 		}
