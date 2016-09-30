@@ -276,8 +276,8 @@ object Helper {
     println(str + " equals to " + Helper.doEvaluate(str))
   }
 
-  def doSolve(str: String, n: Int): scala.collection.mutable.Set[Int] = {
-    var res = scala.collection.mutable.Set[Int]()
+  def doSolve(str: String, n: Int): scala.collection.mutable.ListBuffer[Int] = {
+    var res = scala.collection.mutable.ListBuffer[Int]()
     for (i <- 1 to n) {
       val value = doEvaluate(str.replace("x", i.toString))
       if (value == 0) {
@@ -304,12 +304,14 @@ object Helper {
       for (j <- 1 to k) {
         val anotherStr = str.replace("a", i.toString).replace("b", j.toString)
         val solutions = this.doSolve(anotherStr, n)
-        if (solutions.size != n && solutions.size > 1) {
+        if (solutions.nonEmpty) {
           print(anotherStr + " has solutions ")
           for (solution <- solutions)
             print(solution.toString + " ")
-          println()
+        } else {
+          print(anotherStr + " has no solutions")
         }
+        println()
       }
     }
   }
@@ -318,12 +320,14 @@ object Helper {
     for (i <- 1 to k) {
       val anotherStr = str.replace("a", i.toString)
       val solutions = this.doSolve(anotherStr, n)
-      if (solutions.size != n && solutions.size > 1) {
+      if (solutions.nonEmpty) {
         print(anotherStr + " has solutions ")
         for (solution <- solutions)
           print(solution.toString + " ")
-        println()
+      } else {
+        print(anotherStr + " has no solutions")
       }
+      println()
     }
   }
 
